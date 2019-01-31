@@ -13,12 +13,29 @@ class UsersController extends AdminController {
         $this->loadModel('Users');
         $this->loadModel('AdminSettings');
         $this->loadModel('MailTemplates');  
-       
+        $this->loadModel('Payments');
         // Set Layout
         $this->viewBuilder()->setLayout('admin');
 
         // Auth Allow
         $this->Auth->allow(['login', 'dashboard']);
+        $user = $this->Auth->user();
+        if($this->request->getQuery('view'))
+        {
+            $user['start_date'] = $this->request->getQuery('from');
+            $user['end_date'] = $this->request->getQuery('to');
+        }
+        else
+        {
+            if (!isset($user['start_date'])) {
+                $today = date("Y-m-d");
+                $user['start_date'] = date("Y-m-d",strtotime($today.' -1 month +1 day'));
+                $user['end_date'] = $today;
+            }
+        }
+        $this->Auth->setUser($user);
+        $this->from = $this->Auth->user('start_date');
+        $this->to = $this->Auth->user('end_date');
     }
 
     public function login() {
@@ -31,16 +48,247 @@ class UsersController extends AdminController {
      * Date        :  16th Oct 2018
      * Description :  Admin Dashboard
      */
-
+/*
+     * Developer   :  Arpit Jain
+     * Date        :  30th Jan 2019
+     * Description :  Transactional Graphs
+     */
     public function dashboard() {
         if (!$this->Auth->user('id')) {
             return $this->redirect(HTTP_ROOT . "login");
         }
-
-        $pageHeading = "Dashboard";
-        $this->set(compact('pageHeading'));
+            // $dates = $this->parseDates($this->request->getQuery('from'),$this->request->getQuery('to'));
+         
+        $from = $this->from;
+        $to = $this->to;
+        $piechart = $this->piechart(array('paid' => 1,'unpaid' => 0),$from,$to);
+        $this->set(compact('piechart','from','to'));
     }
+    public function paymentSuccessRatio() {
+        if (!$this->Auth->user('id')) {
+            return $this->redirect(HTTP_ROOT . "login");
+        }
+        $from = $this->from;
+        $to = $this->to;
 
+        $query = $this->Payments->find();
+        $query->select(['unmappedstatus'])->distinct()->where(function ($exp,$q) {
+            return $exp->isNotNull('unmappedstatus');
+        });
+        $query->enableHydration(false); // Results as arrays instead of entities
+        $result = $query->toList();
+        $unmappedstatus = [];
+        foreach ($result as $key => $value) {
+            array_push($unmappedstatus, $value['unmappedstatus']);
+        }
+
+        $donutchart = $this->donutchart($unmappedstatus,$from,$to);
+        $this->set(compact('donutchart','from','to'));
+    }
+    public function modesOfPayment() {
+        if (!$this->Auth->user('id')) {
+            return $this->redirect(HTTP_ROOT . "login");
+        }
+        $query = $this->Payments->find();
+        $query->select(['mode'])->distinct()->where(function ($exp,$q) {
+            return $exp->isNotNull('mode');
+        });
+        $query->enableHydration(false); // Results as arrays instead of entities
+        $result = $query->toList();
+        $paymentmod = [];
+        foreach ($result as $key => $value) {
+            array_push($paymentmod, $value['mode']);
+        }
+        $from = $this->from;
+        $to = $this->to;
+        $paymentmod_data = $this->paymentmod($paymentmod,$from,$to);
+
+        $this->set(compact('paymentmod_data','from','to'));
+    }
+    public function dateWiseStatus() {
+        if (!$this->Auth->user('id')) {
+            return $this->redirect(HTTP_ROOT . "login");
+        }
+        $from = $this->from;
+        $to = $this->to;
+        $this->set(compact('barchart','from','to'));
+    }
+    protected function piechart($conditions,$from_date,$to_date)
+    {
+        $query = $this->Payments->find()->where(function($exp) use ($from_date,$to_date) {
+                return $exp->between('created', $from_date, $to_date, 'date');
+            });
+        $successfullPayment = $query->newExpr()
+            ->addCase($query->newExpr()->add(['status' => 1]), 1, 'integer');
+
+        $unsuccessfullPayment = $query->newExpr()
+            ->addCase($query->newExpr()->add(['status' => 0]), 1, 'integer');
+
+        $query->select([
+            'paid' => $query->func()->count($successfullPayment),
+            'unpaid' => $query->func()->count($unsuccessfullPayment)
+        ]);
+        $query->enableHydration(false); // Results as arrays instead of entities
+        $result = $query->toList()[0];
+        $color = array("paid"=>"green","unpaid"=> "red");
+        foreach ($result as $key => $value) {
+            $data[] = array('section'=>$key,'total'=> $value,'color' =>$color[$key]);
+        }
+        return $data;                  
+    }
+    protected function donutchart($conditions,$from_date,$to_date)
+    {
+        $query = $this->Payments->find()->where(function($exp) use ($from_date,$to_date) {
+                return $exp->between('payment_date', $from_date, $to_date, 'date');
+            });
+        foreach ($conditions as $value) {
+            $paytype[$value] = $query->newExpr()->addCase($query->newExpr()->add(['unmappedstatus' => $value]), 1, 'integer');
+            $request[$value] = $query->func()->count($paytype[$value]);
+        }
+        $query->select($request);
+        $query->enableHydration(false); // Results as arrays instead of entities
+        $result = $query->toList()[0];
+        foreach ($result as $key => $value) {
+            $data[] = array('section'=>$key,'total'=> $value);
+        }
+        return $data;                   
+    }
+    public function barchart()
+    {
+        $input['from'] = $this->from;
+        $input['to'] = $this->to;
+        $input['period'] = $this->request->getQuery('period');
+        switch ($input['period']) {
+            case 'Month':
+                echo json_encode($this->monthlybarchart($input));
+                break;
+            case 'Week':
+                echo json_encode($this->weeklybarchart($input));
+                break;
+            case 'Day':
+                echo json_encode($this->dailybarchart($input));
+                break;
+            
+            default:
+                echo "ajax call tempered";
+                break;
+        }
+        die;
+    }
+    protected function monthlybarchart($input)
+    {
+        $time1  = strtotime($input['from']);
+        $time2  = strtotime($input['to']);
+        $timetravel = $time1;
+        $query = $this->Payments->find()->where(['payment_date >=' => $input['from'], 'payment_date <=' => $input['to'], ]);
+        while($timetravel <= $time2) {
+            $month = date('M-Y', $timetravel);
+            $month_num = (int)date('m', $timetravel);
+            $year = date('Y',$timetravel);
+
+            $monthlypaid[$month] = $query->newExpr()->addCase($query->newExpr()->add(['Month(Payments.created)' => $month_num,'Year(Payments.created)' => $year,'status'=>1]), 1, 'integer');
+            $monthly_paid_query[$month] = $query->func()->count($monthlypaid[$month]);
+
+            $monthlyunpaid[$month] = $query->newExpr()->addCase($query->newExpr()->add(['Month(Payments.created)' => $month_num,'Year(Payments.created)' => $year,'status'=>0]), 1, 'integer');
+            $monthly_unpaid_query[$month] = $query->func()->count($monthlyunpaid[$month]);
+            // echo "before ".date("Y-m-d",$timetravel);
+            $timetravel += strtotime('+1 month', 0);
+            // echo "after ".date("Y-m-d",$timetravel);
+
+        }
+        $query->select($monthly_paid_query);
+        $query->enableHydration(false); // Results as arrays instead of entities
+        $paidresult = $query->toList()[0];
+
+        $query->select($monthly_unpaid_query);
+        $query->enableHydration(false); // Results as arrays instead of entities
+        $unpaidresult = $query->toList()[0];
+        $timetravel = $time1;
+        while($timetravel <= $time2) {
+            $monthYear = date('M-Y', $timetravel);
+            $chartData[] = array('date'=> date('Y-m-d',$timetravel),'paid' => $paidresult[$monthYear], 'unpaid' => $unpaidresult[$monthYear]);
+            $timetravel += strtotime('+1 month', 0);
+        }
+        return $chartData;
+    }
+    protected function weeklybarchart($input)
+    {
+        $time1  = strtotime($input['from']);
+        $timetravel = $time1;
+        $time2  = strtotime($input['to']);
+        $query = $this->Payments->find()
+                                ->where(['payment_date >=' => $input['from'], 'payment_date <=' => $input['to'], ]);
+        while ($timetravel <= $time2) { 
+            $week_key = "Week-".date('oW', $timetravel);
+            $week_value = date('oW', $timetravel);
+            $weeklypaid[$week_key] = $query->newExpr()->addCase($query->newExpr()->add(['YEARWEEK(Payments.created)' => $week_value,'status'=>1]), 1, 'integer');
+            $weekly_paid_query[$week_key] = $query->func()->count($weeklypaid[$week_key]);
+
+            $weeklyunpaid[$week_key] = $query->newExpr()->addCase($query->newExpr()->add(['YEARWEEK(Payments.created)' => $week_value,'status'=>0]), 1, 'integer');
+            $weekly_unpaid_query[$week_key] = $query->func()->count($weeklyunpaid[$week_key]);
+            $timetravel += strtotime('+1 week', 0);
+        }
+        $query->select($weekly_paid_query);
+        $query->enableHydration(false); // Results as arrays instead of entities
+        $paidresult = $query->toList()[0];
+
+        $query->select($weekly_unpaid_query);
+        $query->enableHydration(false); // Results as arrays instead of entities
+        $unpaidresult = $query->toList()[0];
+        $timetravel = $time1;
+        while ($timetravel <= $time2) {
+            $week_key = "Week-".date('oW', $timetravel);
+            $chartData[] = array('date' => date('Y-m-d', $timetravel), 'paid' => $paidresult[$week_key], 'unpaid' => $unpaidresult[$week_key],'period' => $week_key);
+            $timetravel += strtotime('+1 week', 0);
+        }
+        return $chartData;
+    }
+    protected function dailybarchart($input)
+    {
+        $time1  = strtotime($input['from']);
+        $timetravel = $time1;
+        $time2  = strtotime($input['to']);
+        $query = $this->Payments->find()->where(['payment_date >=' => $input['from'], 'payment_date <=' => $input['to'], ]);
+        while ($timetravel <= $time2) { 
+            $day_key = date('Y-m-d', $timetravel);
+            $weeklypaid[$day_key] = $query->newExpr()->addCase($query->newExpr()->add(['Day(Payments.created)' => (int)date('d',$timetravel),'Month(Payments.created)' => (int)date('m',$timetravel),'Year(Payments.created)' => date('Y',$timetravel),'status'=>1]), 1, 'integer');
+            $weekly_paid_query[$day_key] = $query->func()->count($weeklypaid[$day_key]);
+
+            $weeklyunpaid[$day_key] = $query->newExpr()->addCase($query->newExpr()->add(['Day(Payments.created)' => (int)date('d',$timetravel),'Month(Payments.created)' => (int)date('m',$timetravel),'Year(Payments.created)' => date('Y',$timetravel),'status'=>0]), 1, 'integer');
+            $weekly_unpaid_query[$day_key] = $query->func()->count($weeklyunpaid[$day_key]);
+            $timetravel += strtotime('+1 day', 0);
+        }
+        $query->select($weekly_paid_query);
+        $query->enableHydration(false); // Results as arrays instead of entities
+        $paidresult = $query->toList()[0];
+        $query->select($weekly_unpaid_query);
+        $query->enableHydration(false); // Results as arrays instead of entities
+        $unpaidresult = $query->toList()[0];
+        $timetravel = $time1;
+        while ($timetravel <= $time2) {
+            $day_key = date('Y-m-d', $timetravel);
+            $chartData[] = array('date' => date('Y-m-d', $timetravel), 'paid' => $paidresult[$day_key], 'unpaid' => $unpaidresult[$day_key]);
+            $timetravel += strtotime('+1 day', 0);
+        }
+        return $chartData;
+    }
+    protected function paymentmod($conditions,$from_date,$to_date)
+    {
+        $query = $this->Payments->find()->where(function($exp) use ($from_date,$to_date) {
+                return $exp->between('payment_date', $from_date, $to_date, 'date');
+            });
+        foreach ($conditions as $value) {
+            $paytype[$value] = $query->newExpr()->addCase($query->newExpr()->add(['mode' => $value]), 1, 'integer');
+            $request[$value] = $query->func()->count($paytype[$value]);
+        }
+        $query->select($request);
+        $query->enableHydration(false); // Results as arrays instead of entities
+        $result = $query->toList()[0];
+        foreach ($result as $key => $value) {
+            $data[] = array('section'=>$key,'total'=> $value);
+        }
+        return $data; 
+    }
     /*
      * Developer   :  Mahesh Pradhan
      * Date        :  16th Oct 2018

@@ -32,9 +32,9 @@
                             <td><?= date_format($webfront->created, 'd M, Y'); ?></a></td>                       
                             <td>
                                 <?php if ($webfront->is_published == 0) { ?>
-                                    <a class="un-paid" href="merchants/publish/<?= $webfront->id ?>" style="width: 110px;">Un-Published</a>
+                                    <a class="un-paid" onclick="customConfirm('You want to Published.', '<?= HTTP_ROOT . 'merchants/publish/' . $webfront->id ?>');" href="javascript:;" style="width: 110px;">Un-Published</a>
                                 <?php } else { ?>
-                                    <a class="paid" href="merchants/unpublish/<?= $webfront->id ?>" style="width: 110px;">Published</a>
+                                    <a class="paid" onclick="customConfirm('You want to Unpublished.', '<?= HTTP_ROOT . 'merchants/unpublish/' . $webfront->id ?>');" href="javascript:;" style="width: 110px;">Published</a>
                                 <?php } ?>
                             </td>
                             <td>
@@ -47,7 +47,7 @@
                                         <li><a data-toggle="modal" data-target="#modalForQr<?= $webfront->id ?>" href="javascript:;"><i class="fa fa-qrcode" aria-hidden="true"></i>QR</a></li>
                                         <li><a data-toggle="modal" data-target="#modalForShortUrl<?= $webfront->id ?>" href="javascript:;"><i class="fa fa-link" aria-hidden="true"></i>Short URL</a></li>
                                         <li><a href="<?= HTTP_ROOT . "merchants/edit-basic-webfront/" . $webfront->unique_id ?>"><i class="fa fa-edit" aria-hidden="true"></i>Edit</a></li>
-                                        <li><a href="<?= HTTP_ROOT . 'merchants/delete-webfront/' . $webfront->unique_id ?>" onclick="return confirm('Are You Sure Want To Delete this webfront ?')"><i class="fa fa-trash-o" aria-hidden="true"></i>Delete</a></li>
+                                        <li><a onclick="customConfirm('You want to delete.', '<?= HTTP_ROOT . 'merchants/delete-webfront/' . $webfront->unique_id ?>');" href="javascript:;"><i class="fa fa-trash-o" aria-hidden="true"></i>Delete</a></li>
                                     </ul>
                                 </div>
                             </td>

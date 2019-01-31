@@ -88,12 +88,12 @@
                             </div>   
                             <div style="float: right; margin: 5px 10px;">
                                 <?php if ($paymentGateway->is_default) { ?>
-                                    <a href="<?= HTTP_ROOT . "merchants/activatePaymentGateway/{$paymentGateway->unique_id}" ?>" onclick="return confirm('Are you sure you want to De-Activate?')"><i class="fa fa-thumbs-up" style="color: #28d227; font-size: 25px;" aria-hidden="true"></i></a>&nbsp;
+                                    <a onclick="customConfirm('You want to Deactivate.', '<?= HTTP_ROOT . "merchants/activatePaymentGateway/{$paymentGateway->unique_id}" ?>');" href="javascript:;"><i class="fa fa-thumbs-up" style="color: #28d227; font-size: 25px;" aria-hidden="true"></i></a>&nbsp;
                                 <?php } else { ?>
-                                    <a href="<?= HTTP_ROOT . "merchants/activatePaymentGateway/{$paymentGateway->unique_id}" ?>" onclick="return confirm('Are you sure you want to activate?')"><i class="fa fa-thumbs-down" style="color: #e22e4e; font-size: 25px;" aria-hidden="true"></i></a>&nbsp;
+                                    <a onclick="customConfirm('You want to Activate.', '<?= HTTP_ROOT . "merchants/activatePaymentGateway/{$paymentGateway->unique_id}" ?>');" href="javascript:;" ><i class="fa fa-thumbs-down" style="color: #e22e4e; font-size: 25px;" aria-hidden="true"></i></a>&nbsp;
                                 <?php } ?>
                                 <a href="javascript:;" data-id="<?= $paymentGateway->id ?>" class="togglePGInfo"><i class="fa fa-pencil-square-o" style="font-size: 23px;padding-top: 7px;" aria-hidden="true"></i></a>&nbsp;
-                                <a href="<?= HTTP_ROOT . "merchants/deletePaymentInfo/{$paymentGateway->unique_id}" ?>" onclick="return confirm('Are you sure you want to delete?')"><i class="fa fa-trash-o" style="color: #212529;font-size: 25px;" aria-hidden="true"></i></a>
+                                <a onclick="customConfirm('You want to delete.', '<?= HTTP_ROOT . "merchants/deletePaymentInfo/{$paymentGateway->unique_id}" ?>');" href="javascript:;"><i class="fa fa-trash-o" style="color: #212529;font-size: 25px;" aria-hidden="true"></i></a>
                             </div> 
                         </div> 
                     </div>

@@ -9,7 +9,8 @@
 
             <?= $this->Form->create($webfront, ['type' => 'file']); ?>
 
-            <input type="file" name="logo" id="file-browser" class="text-file"><br><br>
+            <input type="file" name="newlogo" required id="file-browser" class="text-file"><br><br>
+            
             <div class="form-div">
                 <a href="javascript:;" id="cancel-btn" class="button-2 prev-btn">Back</a>
                 <input type="submit" value="Update" id="pic-update-btn" name="pic-update-btn" class="button-3">

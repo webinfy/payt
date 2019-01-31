@@ -11,12 +11,14 @@
         <link href="bootstrap-4/css/bootstrap.min.css" type="text/css" rel="stylesheet"/>
         <link href="css/style-paytring.css" type="text/css" rel="stylesheet"/>
         <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+        <link href="css/sweetalert.css" type="text/css" rel="stylesheet"/>
         <!--<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.css" />-->
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
         <!--<script src="<?= HTTP_ROOT ?>js/jquery-1.10.2.min.js"></script>-->
         <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.js"></script>-->
         <script src="bootstrap-4/js/bootstrap.min.js" type="text/javascript"></script>
         <script src="js/jquery.validate.min.js" language="javascript"></script>
+        <script src="js/sweetalert.min.js" language="javascript"></script>
         <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
         <style> 
 
@@ -59,6 +61,23 @@
                     $("#datepicker,.datepicker").datepicker({dateFormat: 'yy-mm-dd'});
                 });
             });
+            var customConfirm = function(message, link) { 
+                var message = message ? message : "You won't be able to revert this!";
+                swal({
+                    title: 'Are you sure?',
+                    text: message,
+                    type: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: 'rgb(140, 212, 245)',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Confirm'
+                },
+                function (isConfirm) {
+                    if (isConfirm) {
+                        window.location.href = link;
+                    }
+                });
+            };  
         </script>       
     </head>
     <body>

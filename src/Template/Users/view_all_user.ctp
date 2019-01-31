@@ -28,9 +28,9 @@
                             <td><?= $user->phone; ?></td>
                             <td>
                                 <?php if ($user->is_active == 0) { ?>
-                                    <a class="un-paid" href="users/activate/<?= $user->uniq_id ?>" style="width: 110px;">Inactivate</a>
+                                    <a class="un-paid" onclick="customConfirm('You want to Activate.', '<?= HTTP_ROOT . 'users/activate/' . $user->uniq_id ?>');" href="javascript:;" style="width: 110px;">Inactivate</a>
                                 <?php } else { ?>
-                                    <a class="paid" href="users/inactivate/<?= $user->uniq_id ?>" style="width: 110px;">Activate</a>
+                                    <a class="paid" onclick="customConfirm('You want to Inactivate.', '<?= HTTP_ROOT . 'users/inactivate/' . $user->uniq_id ?>');" href="javascript:;" style="width: 110px;">Activate</a>
                                 <?php } ?>
                             </td>
                             <td>
@@ -38,7 +38,7 @@
                                     <ul class="action-btn-list">
                                         <li><a data-toggle="modal" data-target="#myModal<?= $user->id; ?>" href="javascript:;"><i class="fa fa-eye" aria-hidden="true"></i>View</a></li>
                                         <li><a href="<?= HTTP_ROOT . "users/editUser/" . $user->uniq_id ?>"><i class="fa fa-edit" aria-hidden="true"></i>Edit</a></li>
-                                        <li><a href="<?= HTTP_ROOT . "users/deleteUser/" . $user->uniq_id ?>" onclick="return confirm('Are you sure want to delete ?')" ><i class="fa fa-trash-o" aria-hidden="true"></i>Delete</a></li>
+                                        <li><a onclick="customConfirm('You want to delete.', '<?= HTTP_ROOT . 'users/deleteUser/' . $user->uniq_id ?>');" href="javascript:;"><i class="fa fa-trash-o" aria-hidden="true"></i>Delete</a></li>
                                     </ul>
                                 </div>
                             </td>

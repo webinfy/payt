@@ -31,6 +31,23 @@ class MerchantsController extends AppController {
         $this->loadComponent('Paginator');
 
         $this->viewBuilder()->setLayout('default');
+        $user = $this->Auth->user();
+        if($this->request->getQuery('view'))
+        {
+            $user['start_date'] = $this->request->getQuery('from');
+            $user['end_date'] = $this->request->getQuery('to');
+        }
+        else
+        {
+            if (!isset($user['start_date'])) {
+                $today = date("Y-m-d");
+                $user['start_date'] = date("Y-m-d",strtotime($today.' -1 month +1 day'));
+                $user['end_date'] = $today;
+            }
+        }
+        $this->Auth->setUser($user);
+        $this->from = $this->Auth->user('start_date');
+        $this->to = $this->Auth->user('end_date');
     }
 
     public function beforeFilter(Event $event) {
@@ -39,10 +56,246 @@ class MerchantsController extends AppController {
     }
 
     public function index() {
-        $pageHeading = "Dashboard";
-        $this->set(compact('pageHeading'));
+        $from = $this->from;
+        $to = $this->to;
+        $piechart = $this->piechart(array('paid' => 1,'unpaid' => 0),$from,$to);
+        $this->set(compact('piechart','from','to'));
     }
+    protected function getWebfrontsIds()
+    {
+        $webfront_id = $this->Webfronts->find()->where(['merchant_id'=>$this->Auth->user('merchant_id')])->select('id')->enableHydration(false)->toList();
+        $webfront_ids = array();
+        foreach ($webfront_id as $key => $value) {
+            array_push($webfront_ids, $value['id']);
+        }
+        return $webfront_ids;
+    }
+    public function paymentSuccessRatio() {
+        if (!$this->Auth->user('id')) {
+            return $this->redirect(HTTP_ROOT . "login");
+        }
+        $from = $this->from;
+        $to = $this->to;
 
+        $query = $this->Payments->find();
+        $query->select(['unmappedstatus'])->distinct()->where(function ($exp,$q) {
+            return $exp->isNotNull('unmappedstatus');
+        });
+        $query->enableHydration(false); // Results as arrays instead of entities
+        $result = $query->toList();
+        $unmappedstatus = [];
+        foreach ($result as $key => $value) {
+            array_push($unmappedstatus, $value['unmappedstatus']);
+        }
+
+        $donutchart = $this->donutchart($unmappedstatus,$from,$to);
+        $this->set(compact('donutchart','from','to'));
+    }
+    public function modesOfPayment() {
+        if (!$this->Auth->user('id')) {
+            return $this->redirect(HTTP_ROOT . "login");
+        }
+        $query = $this->Payments->find();
+        $query->select(['mode'])->distinct()->where(function ($exp,$q) {
+            return $exp->isNotNull('mode');
+        });
+        $query->enableHydration(false); // Results as arrays instead of entities
+        $result = $query->toList();
+        $paymentmod = [];
+        foreach ($result as $key => $value) {
+            array_push($paymentmod, $value['mode']);
+        }
+        $from = $this->from;
+        $to = $this->to;
+        $paymentmod_data = $this->paymentmod($paymentmod,$from,$to);
+
+        $this->set(compact('paymentmod_data','from','to'));
+    }
+    public function dateWiseStatus() {
+        if (!$this->Auth->user('id')) {
+            return $this->redirect(HTTP_ROOT . "login");
+        }
+        $from = $this->from;
+        $to = $this->to;
+        $this->set(compact('barchart','from','to'));
+    }
+    protected function piechart($conditions,$from_date,$to_date)
+    {
+        $query = $this->Payments->find()->where(function($exp) use ($from_date,$to_date) {
+                return $exp->between('created', $from_date, $to_date, 'date')->in('webfront_id',$this->getWebfrontsIds());
+            });
+        $successfullPayment = $query->newExpr()
+            ->addCase($query->newExpr()->add(['status' => 1]), 1, 'integer');
+
+        $unsuccessfullPayment = $query->newExpr()
+            ->addCase($query->newExpr()->add(['status' => 0]), 1, 'integer');
+
+        $query->select([
+            'paid' => $query->func()->count($successfullPayment),
+            'unpaid' => $query->func()->count($unsuccessfullPayment)
+        ]);
+        $query->enableHydration(false); // Results as arrays instead of entities
+        $result = $query->toList()[0];
+        $color = array("paid"=>"green","unpaid"=> "red");
+        foreach ($result as $key => $value) {
+            $data[] = array('section'=>$key,'total'=> $value,'color' =>$color[$key]);
+        }
+        return $data;                  
+    }
+    protected function donutchart($conditions,$from_date,$to_date)
+    {
+        $query = $this->Payments->find()->where(function($exp) use ($from_date,$to_date) {
+                return $exp->between('payment_date', $from_date, $to_date, 'date')->in('webfront_id',$this->getWebfrontsIds());
+            });
+        foreach ($conditions as $value) {
+            $paytype[$value] = $query->newExpr()->addCase($query->newExpr()->add(['unmappedstatus' => $value]), 1, 'integer');
+            $request[$value] = $query->func()->count($paytype[$value]);
+        }
+        $query->select($request);
+        $query->enableHydration(false); // Results as arrays instead of entities
+        $result = $query->toList()[0];
+        foreach ($result as $key => $value) {
+            $data[] = array('section'=>$key,'total'=> $value);
+        }
+        return $data;                   
+    }
+    public function barchart()
+    {
+        $input['from'] = $this->from;
+        $input['to'] = $this->to;
+        $input['period'] = $this->request->getQuery('period');
+        switch ($input['period']) {
+            case 'Month':
+                echo json_encode($this->monthlybarchart($input));
+                break;
+            case 'Week':
+                echo json_encode($this->weeklybarchart($input));
+                break;
+            case 'Day':
+                echo json_encode($this->dailybarchart($input));
+                break;
+            
+            default:
+                echo "ajax call tempered";
+                break;
+        }
+        die;
+    }
+    protected function monthlybarchart($input)
+    {
+        $time1  = strtotime($input['from']);
+        $time2  = strtotime($input['to']);
+        $timetravel = $time1;
+        $query = $this->Payments->find()
+        ->where(['payment_date >=' => $input['from'], 'payment_date <=' => $input['to'], 'webfront_id IN' =>$this->getWebfrontsIds() ]);
+        while($timetravel <= $time2) {
+            $month = date('M-Y', $timetravel);
+            $month_num = (int)date('m', $timetravel);
+            $year = date('Y',$timetravel);
+
+            $monthlypaid[$month] = $query->newExpr()->addCase($query->newExpr()->add(['Month(Payments.created)' => $month_num,'Year(Payments.created)' => $year,'status'=>1]), 1, 'integer');
+            $monthly_paid_query[$month] = $query->func()->count($monthlypaid[$month]);
+
+            $monthlyunpaid[$month] = $query->newExpr()->addCase($query->newExpr()->add(['Month(Payments.created)' => $month_num,'Year(Payments.created)' => $year,'status'=>0]), 1, 'integer');
+            $monthly_unpaid_query[$month] = $query->func()->count($monthlyunpaid[$month]);
+            // echo "before ".date("Y-m-d",$timetravel);
+            $timetravel += strtotime('+1 month', 0);
+            // echo "after ".date("Y-m-d",$timetravel);
+
+        }
+        $query->select($monthly_paid_query);
+        $query->enableHydration(false); // Results as arrays instead of entities
+        $paidresult = $query->toList()[0];
+
+        $query->select($monthly_unpaid_query);
+        $query->enableHydration(false); // Results as arrays instead of entities
+        $unpaidresult = $query->toList()[0];
+        $timetravel = $time1;
+        while($timetravel <= $time2) {
+            $monthYear = date('M-Y', $timetravel);
+            $chartData[] = array('date'=> date('Y-m-d',$timetravel),'paid' => $paidresult[$monthYear], 'unpaid' => $unpaidresult[$monthYear]);
+            $timetravel += strtotime('+1 month', 0);
+        }
+        return $chartData;
+    }
+    protected function weeklybarchart($input)
+    {
+        $time1  = strtotime($input['from']);
+        $timetravel = $time1;
+        $time2  = strtotime($input['to']);
+        $query = $this->Payments->find()->where(['payment_date >=' => $input['from'], 'payment_date <=' => $input['to'], 'webfront_id IN' =>$this->getWebfrontsIds()]);
+        while ($timetravel <= $time2) { 
+            $week_key = "Week-".(int)date('W', $timetravel);
+            $week_value = (int)date('W', $timetravel);
+            $weeklypaid[$week_key] = $query->newExpr()->addCase($query->newExpr()->add(['Week(Payments.created)' => $week_value,'Year(Payments.created)' => date('Y',$timetravel),'status'=>1]), 1, 'integer');
+            $weekly_paid_query[$week_key] = $query->func()->count($weeklypaid[$week_key]);
+
+            $weeklyunpaid[$week_key] = $query->newExpr()->addCase($query->newExpr()->add(['Week(Payments.created)' => $week_value,'Year(Payments.created)' => date('Y',$timetravel),'status'=>0]), 1, 'integer');
+            $weekly_unpaid_query[$week_key] = $query->func()->count($weeklyunpaid[$week_key]);
+            $timetravel += strtotime('+1 week', 0);
+        }
+        
+        $query->select($weekly_paid_query);
+        $query->enableHydration(false); // Results as arrays instead of entities
+        $paidresult = $query->toList()[0];
+
+        $query->select($weekly_unpaid_query);
+        $query->enableHydration(false); // Results as arrays instead of entities
+        $unpaidresult = $query->toList()[0];
+        $timetravel = $time1;
+        while ($timetravel <= $time2) {
+            $week_key = "Week-".(int)date('W', $timetravel);
+            $chartData[] = array('date' => date('Y-m-d', $timetravel), 'paid' => $paidresult[$week_key], 'unpaid' => $unpaidresult[$week_key]);
+            $timetravel += strtotime('+1 week', 0);
+        }
+        return $chartData;
+    }
+    protected function dailybarchart($input)
+    {
+        $time1  = strtotime($input['from']);
+        $timetravel = $time1;
+        $time2  = strtotime($input['to']);
+        $query = $this->Payments->find()->where(['payment_date >=' => $input['from'], 'payment_date <=' => $input['to'], 'webfront_id IN' => $this->getWebfrontsIds()]);
+        while ($timetravel <= $time2) { 
+            $day_key = date('Y-m-d', $timetravel);
+            $weeklypaid[$day_key] = $query->newExpr()->addCase($query->newExpr()->add(['Day(Payments.created)' => (int)date('d',$timetravel),'Month(Payments.created)' => (int)date('m',$timetravel),'Year(Payments.created)' => date('Y',$timetravel),'status'=>1]), 1, 'integer');
+            $weekly_paid_query[$day_key] = $query->func()->count($weeklypaid[$day_key]);
+
+            $weeklyunpaid[$day_key] = $query->newExpr()->addCase($query->newExpr()->add(['Day(Payments.created)' => (int)date('d',$timetravel),'Month(Payments.created)' => (int)date('m',$timetravel),'Year(Payments.created)' => date('Y',$timetravel),'status'=>0]), 1, 'integer');
+            $weekly_unpaid_query[$day_key] = $query->func()->count($weeklyunpaid[$day_key]);
+            $timetravel += strtotime('+1 day', 0);
+        }
+        $query->select($weekly_paid_query);
+        $query->enableHydration(false); // Results as arrays instead of entities
+        $paidresult = $query->toList()[0];
+        $query->select($weekly_unpaid_query);
+        $query->enableHydration(false); // Results as arrays instead of entities
+        $unpaidresult = $query->toList()[0];
+        $timetravel = $time1;
+        while ($timetravel <= $time2) {
+            $day_key = date('Y-m-d', $timetravel);
+            $chartData[] = array('date' => date('Y-m-d', $timetravel), 'paid' => $paidresult[$day_key], 'unpaid' => $unpaidresult[$day_key]);
+            $timetravel += strtotime('+1 day', 0);
+        }
+        return $chartData;
+    }
+    protected function paymentmod($conditions,$from_date,$to_date)
+    {
+        $query = $this->Payments->find()->where(function($exp) use ($from_date,$to_date) {
+                return $exp->between('payment_date', $from_date, $to_date, 'date')->in('webfront_id',$this->getWebfrontsIds());
+            });
+        foreach ($conditions as $value) {
+            $paytype[$value] = $query->newExpr()->addCase($query->newExpr()->add(['mode' => $value]), 1, 'integer');
+            $request[$value] = $query->func()->count($paytype[$value]);
+        }
+        $query->select($request);
+        $query->enableHydration(false); // Results as arrays instead of entities
+        $result = $query->toList()[0];
+        foreach ($result as $key => $value) {
+            $data[] = array('section'=>$key,'total'=> $value);
+        }
+        return $data; 
+    }
     public function viewProfile() {
         $pageHeading = "View Profile";
 
@@ -673,22 +926,24 @@ class MerchantsController extends AppController {
                     $this->WebfrontPaymentAttributes->deleteAll(['webfront_id' => $webfrontID, 'modified !=' => $modified]);
                     $this->Flash->Success(__('Payment Fields Updated Successfully!!'));
                     return $this->redirect(HTTP_ROOT . "merchants/edit-basic-webfront/{$webfront->unique_id}" . '?tab=webfrontlogo');
-                } else if (!empty($data['logo'])) {
+                } else if (!empty($data['newlogo'])) {
 
-                    $fileName = $this->Custom->uploadImage($data['logo'], WEBFRONT_LOGO);
-                    $oldPhoto = $webfront->logo;
-                    if ($fileName) {
-                        // Update new image name to the db
-                        $query = $this->Webfronts->query()->update()->set(['logo' => $fileName])->where(['id' => $webfrontID])->execute();
-                        if ($query) {
-                            if (file_exists(WEBFRONT_LOGO . $oldPhoto)) {
-                                @unlink(WEBFRONT_LOGO . $oldPhoto);
-                            }
-                        }
-                        $this->Flash->success(__('Webfront Logo Updated Successfully'));
-                        return $this->redirect(HTTP_ROOT . "merchants/edit-basic-webfront/{$webfront->unique_id}" . '?tab=profilepicture');
+                    if (empty($data['newlogo']['name'])) {
+                        $this->Flash->error(__('Please browse an image!'));
                     } else {
-                        $this->Flash->error(__('Webfront Logo Uploading Failed'));
+                        
+                        $fileName = $this->Custom->uploadImage($data['newlogo'], WEBFRONT_LOGO);
+                        if ($fileName) {
+                            // Update new image name to the db
+                            $logoUpdated = $this->Webfronts->query()->update()->set(['logo' => $fileName])->where(['id' => $webfrontID])->execute();
+                            if ($logoUpdated) {                                
+                                file_exists(WEBFRONT_LOGO . $webfront->logo) &&  @unlink(WEBFRONT_LOGO . $webfront->logo);  
+                                $this->Flash->success(__('Webfront Logo Updated Successfully'));
+                                return $this->redirect(HTTP_ROOT . "merchants/edit-basic-webfront/{$webfront->unique_id}" . '?tab=profilepicture');
+                            }                            
+                        } 
+                        
+                        $this->Flash->error(__('Webfront Logo Uploading Failed'));                        
                     }
                 } else {
 

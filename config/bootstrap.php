@@ -207,7 +207,7 @@ define('LIVE', TRUE);
 //    define('HTTP_ROOT', $siteUrl . "/");
 //}
 
-define('HTTP_ROOT', "https://paytring.com/");
+define('HTTP_ROOT', "http://localhost/paytring/");
 
 //define('KEY', 'ABoapK');
 define('KEY', 'xlIeC9');

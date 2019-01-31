@@ -54,6 +54,10 @@ Router::prefix('admin', function ($routes) {
     $routes->connect('/login', ['controller' => 'Users', 'action' => 'login']);
     $routes->connect('/logout', ['controller' => 'Users', 'action' => 'logout']);
     $routes->connect('/account-setup', ['controller' => 'Users', 'action' => 'accountSetup']);
+    $routes->connect('/payment-success-ratio', ['controller' => 'Users', 'action' => 'paymentSuccessRatio']);
+    $routes->connect('/modes-of-payment', ['controller' => 'Users', 'action' => 'modesOfPayment']);
+    $routes->connect('/date-wise-status', ['controller' => 'Users', 'action' => 'dateWiseStatus']);
+    $routes->connect('/barchart', ['controller' => 'Users', 'action' => 'barchart']);
     $routes->connect('/admin-settings', ['controller' => 'Users', 'action' => 'adminSettings']);
     $routes->connect('/change-password', ['controller' => 'Users', 'action' => 'changePassword']);
 

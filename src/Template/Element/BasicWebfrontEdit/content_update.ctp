@@ -51,17 +51,25 @@
 </div>
 <div id="late_fee_type_3" class="form-div" style="display: none;">
     <div class="form-div">
+        <label class="form-label">&nbsp;</label>                  
+        <div style="float: left; color: red; font-size: 12px;">Ex : After 5 days from due date Late fee Rs.100</div>
+    </div>
+    <div class="form-div">
         <label class="form-label">Period 1 :</label>                  
-        <div  style="float: left;">
-            <?= $this->Form->control('periodic_days_1', ['type' => 'text', 'placeholder' => 'No of Days', 'class' => 'col-sm-6 text-box numericonly', 'style' => "margin-right: 5px;", 'label' => false]); ?>
-            <?= $this->Form->control('periodic_amount_1', ['type' => 'text', 'placeholder' => 'Amount', 'class' => 'col-sm-3 text-box decimalonly', 'label' => false]); ?>
+        <div style="float: left; position: relative;">
+            <span class="afterPrefix">After</span><?= $this->Form->control('periodic_days_1', ['type' => 'text', 'placeholder' => 'No Of', 'class' => 'col-sm-6 text-box numericonly', 'style' => "margin-right: 5px;", 'label' => false, 'style' => 'padding-left: 50px;width: 148px;margin-right: 15px;']); ?><span class="daysPrefix">Days</span>
+            <span style=" position: relative;display: inline-block;">
+                <span class="moneyPrefix">Rs.</span><?= $this->Form->control('periodic_amount_1', ['type' => 'text', 'placeholder' => 'Amount', 'class' => 'col-sm-3 text-box decimalonly', 'label' => false, 'style' => 'padding-left: 35px']); ?>
+            </span>
         </div>                  
     </div>
     <div class="form-div">
         <label class="form-label">Period 2 :</label>                   
-        <div  style="float: left;">
-            <?= $this->Form->control('periodic_days_2', ['type' => 'text', 'placeholder' => 'No of Days', 'class' => 'col-sm-6 text-box numericonly', 'style' => "margin-right: 5px;", 'label' => false]); ?>
-            <?= $this->Form->control('periodic_amount_2', ['type' => 'text', 'placeholder' => 'Amount', 'class' => 'col-sm-3 text-box decimalonly', 'label' => false]); ?>
+        <div style="float: left; position: relative;">
+            <span class="afterPrefix">After</span><?= $this->Form->control('periodic_days_2', ['type' => 'text', 'placeholder' => 'No Of', 'class' => 'col-sm-6 text-box numericonly', 'style' => "margin-right: 5px;", 'label' => false, 'style' => 'padding-left: 50px;width: 148px;margin-right: 15px;']); ?><span class="daysPrefix">Days</span>
+            <span style=" position: relative;display: inline-block;">
+                <span class="moneyPrefix">Rs.</span><?= $this->Form->control('periodic_amount_2', ['type' => 'text', 'placeholder' => 'Amount', 'class' => 'col-sm-3 text-box decimalonly', 'label' => false, 'style' => 'padding-left: 35px;']); ?>
+            </span>
         </div>
     </div>
 </div>

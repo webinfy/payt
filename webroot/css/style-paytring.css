@@ -262,7 +262,38 @@ label.error {color: rgb(255, 2, 2);font-size: 12px;float: left;width: 65%;margin
     color: transparent !important;
     background-size: contain;
 }
-
+.moneyPrefix {
+    position: absolute;
+    left: 10px;
+    top: 0;
+    width: 30px;
+    line-height: 37px;
+    bottom: 0;
+    z-index: 9;
+    font-size: 14px;
+}
+.afterPrefix {
+    position: absolute;
+    left: 3%;
+    top: 0;
+    width: 30px;
+    line-height: 37px;
+    bottom: 0;
+    z-index: 9;
+    font-size: 14px;
+}
+.daysPrefix {
+    position: absolute;
+    left: 29%;
+    top: 0;
+    width: 30px;
+    line-height: 37px;
+    bottom: 0;
+    z-index: 9;
+    font-size: 14px;
+}
+#periodic-amount-1{min-width: 114px;}
+#periodic-amount-2{min-width: 114px;}
 /*------------Responsive Design CSS Section-------------*/
 @media (max-width:1150px){
     .search-btn,.view-all-btn{font-size: 0;height: 40px;position: relative;top: 0px;background-position: center center;}
@@ -443,6 +474,9 @@ label.error {color: rgb(255, 2, 2);font-size: 12px;float: left;width: 65%;margin
     .success-page{padding: 15px !important;}
     .main-content-section{min-height: 500px;}
     .text-right, .text-left{text-align: center !important;}
+    #periodic-amount-1{width: 114px;}
+    #periodic-amount-2{width: 114px;}
+    .daysPrefix {left: 35%;}
 }
 
 @media (max-width:585px){	

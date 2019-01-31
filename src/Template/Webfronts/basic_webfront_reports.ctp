@@ -23,12 +23,12 @@
         </div>
         <?= $this->Form->end(); ?>
     </div>
-   
+
     <div class="main-content payment-list-div" style="margin-top: 15px;">  
         <?php if (!empty($webfrontId)) { ?>
             <?= $this->Form->create(NULL, ['type' => 'POST', 'url' => ['controller' => 'Merchants', 'action' => 'deleteInvoices'], 'onSubmit' => "return confirm('Are you sure you want to delete?')"]); ?> 
             <div id="actionsDiv" style="float: right; display: none; margin-bottom: 10px;">
-                <button class="btn-red" type="submit" style="margin-right: 0;"><i class="fa fa-trash-o"></i>Delete Selected</button>
+                <button class="btn-red customalert" type="submit" style="margin-right: 0;"><i class="fa fa-trash-o"></i>Delete Selected</button>
             </div>        
             <div class="report-box">
                 <table width="100%" align="left" cellpadding="0" cellspacing="0" class="payment-list-table">
@@ -49,7 +49,7 @@
                     <tbody>
                         <?php foreach ($payments as $payment) { ?>
                             <tr>
-                                <td><input type="checkbox" class="checkbox" name="delete_invoices[]" value="<?= $payment->uniq_id; ?>" data-status="<?= $payment->status; ?>" <?php if($payment->status == 1) { ?> disabled <?php } ?> /></td>
+                                <td><input type="checkbox" class="checkbox" name="delete_invoices[]" value="<?= $payment->uniq_id; ?>" data-status="<?= $payment->status; ?>" <?php if ($payment->status == 1) { ?> disabled <?php } ?> /></td>
                                 <td><?= $payment->name; ?></td>
                                 <td><?= $payment->email; ?></td>
                                 <td><?= $payment->phone; ?></td>
@@ -58,9 +58,9 @@
                                 <td><?= date_format($payment->uploaded_payment_file->payment_cycle_date, 'd M, Y'); ?></td>
                                 <td>
                                     <?php if ($payment->status == 0) { ?>
-                                        <a onclick="return confirm('Are sure you want to mark this as paid?');" href="<?= HTTP_ROOT . "webfronts/update-payment-status/{$payment->uniq_id}/1" ?>" class="un-paid">Un Paid</a>
+                                        <a onclick="customConfirm('You want to mark this as paid.', '<?= HTTP_ROOT . "webfronts/update-payment-status/{$payment->uniq_id}/1" ?>');" href="javascript:;" class="un-paid">Un Paid</a>
                                     <?php } else { ?>
-                                        <a onclick="return confirm('Are sure you want to mark this as not paid?');" href="<?= HTTP_ROOT . "webfronts/update-payment-status/{$payment->uniq_id}/0" ?>" class="paid">Paid</a>
+                                        <a onclick="customConfirm('You want to mark this as not paid.', '<?= HTTP_ROOT . "webfronts/update-payment-status/{$payment->uniq_id}/0" ?>');" href="javascript:;" class="paid">Paid</a>
                                     <?php } ?>
                                 </td>
                                 <td><?= ($payment->status == 1) ? $payment->paid_via : ''; ?></td>
@@ -71,7 +71,7 @@
                                             <li><a href="<?= HTTP_ROOT . "resend-invoice-email/" . $payment->uniq_id ?>"><i class="fa fa-mail-forward" aria-hidden="true"></i>Resend Email</a></li>
                                             <?php if ($payment->status == 0) { ?>
                                                 <li><a href="javascript:;" onclick="editInvoicePopup('<?= $payment->uniq_id ?>')"><i class="fa fa-edit" aria-hidden="true"></i>Edit</a></li>
-                                                <li><a href="<?= HTTP_ROOT . "delete-invoice/" . $payment->uniq_id ?>" onClick="return confirm('Are you sure you want to delete?')"><i class="fa fa-trash-o" aria-hidden="true"></i>Delete</a></li>
+                                                <li><a onclick="customConfirm('You want to delete.', '<?= HTTP_ROOT . "delete-invoice/" . $payment->uniq_id ?>');" href="javascript:;"><i class="fa fa-trash-o" aria-hidden="true"></i>Delete</a></li>
                                             <?php } ?>
                                         </ul>
                                     </div>
@@ -167,20 +167,38 @@
         $('input[name="delete_invoices[]"]').on('click', function () {
             showActions();
         });
-        
+
         $('#selectAll').on('click', function () {
-            if (this.checked) {     
-                $('input[name="delete_invoices[]"][data-status="0"]').prop('checked', true);                 
+            if (this.checked) {
+                $('input[name="delete_invoices[]"][data-status="0"]').prop('checked', true);
             } else {
-                $('input[name="delete_invoices[]"]').prop('checked', false);                  
+                $('input[name="delete_invoices[]"]').prop('checked', false);
             }
             showActions();
         });
-        
+
     });
-    
+    $('.customalert').on('click', function (e) {
+            e.preventDefault();
+            var link = $(this).attr('href');
+            swal({
+                title: 'Are you sure?',
+                text: "You want to delete.",
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: 'rgb(140, 212, 245)',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes!!'
+            },
+            function (isConfirm) {
+                if (isConfirm) {
+                    window.location.href = link;
+                }
+            });
+
+        });
     function showActions() {
-        if($('input[name="delete_invoices[]"]:checked').length > 0) {
+        if ($('input[name="delete_invoices[]"]:checked').length > 0) {
             $('#actionsDiv').show();
         } else {
             $('#actionsDiv').hide();

@@ -10,12 +10,13 @@
         <link rel="shortcut icon" type="image/x-icon" href="favicon.png">          
         <link href="bootstrap-4/css/bootstrap.min.css" type="text/css" rel="stylesheet"/>
         <link href="css/style-paytring.css" type="text/css" rel="stylesheet"/>
+        <link href="css/sweetalert.css" type="text/css" rel="stylesheet"/>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
         <script src="bootstrap-4/js/bootstrap.min.js" type="text/javascript"></script>
         <script src="js/jquery.validate.min.js" language="javascript"></script>
+        <script src="js/sweetalert.min.js" language="javascript"></script>
         <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
         <style> 
-
             #flashError {cursor: pointer;font-size: 15px; font-weight: bold;overflow: hidden;padding: 10px 25px;position: fixed;text-align: left;width:auto;z-index: 999999;margin-left: 46%; top: 9%; background-color: #E6250E; color: #FFF;border-radius: 7px;}
             #flashSuccess {cursor: pointer;font-size: 15px; font-weight: bold;overflow: hidden;padding: 10px 25px;position: fixed;text-align: left;width:auto;z-index: 999999;margin-left: 42%; top: 9%; background-color: #0E9F52; color: #FFF;border-radius: 15px;}
             .error-message{color: rgb(255, 2, 2);font-size: 12px;float: left;width: 65%;margin-left: 160px;margin-bottom: 0;margin-top: 4px;}
@@ -49,6 +50,24 @@
                     }
                 });
             });
+            
+            var customConfirm = function(message, link) { 
+                var message = message ? message : "You won't be able to revert this!";
+                swal({
+                    title: 'Are you sure?',
+                    text: message,
+                    type: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: 'rgb(140, 212, 245)',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Confirm'
+                },
+                function (isConfirm) {
+                    if (isConfirm) {
+                        window.location.href = link;
+                    }
+                });
+            };  
         </script>       
     </head>
     <body>

@@ -2,39 +2,39 @@
     <div class="main-content payment-list-div">
 
         <div class="profile-data">
-            
+
             <?php if ($this->request->getSession()->read('Auth.User.id') == $merchantDetails->id) { ?>
                 <h2>Basic Info <a href="<?= HTTP_ROOT . "merchants/account-setup"; ?>#BasicInfo" class="btn-edit"><i class="fa fa-pencil-square" aria-hidden="true"></i></a></h2>
             <?php } else { ?>
                 <h2>Basic Info <a href="<?= HTTP_ROOT . "admin/edit-merchant/" . $merchantDetails->uniq_id; ?>#BasicInfo" class="btn-edit"><i class="fa fa-pencil-square" aria-hidden="true"></i></a></h2>
             <?php } ?>
 
-                <div class="profile-data-inn">
-                    <h3><?= $merchantDetails->name; ?></h3>
-                    <p><?= $merchantDetails->merchant->description; ?></p>
-                    <div class="pro-d-left">Name</div>
-                    <div class="pro-d-right"><?= $merchantDetails->name; ?></div>
-                    <div class="pro-d-left">Profile URL</div>
-                    <div class="pro-d-right"><a href="<?= HTTP_ROOT . "webfronts/" . $merchantDetails->merchant->profile_url; ?>" target="_blank"><?= HTTP_ROOT . "webfronts/" . $merchantDetails->merchant->profile_url; ?></a></div>
-                    <div class="pro-d-left">Email</div>
-                    <div class="pro-d-right"><?= $merchantDetails->email; ?></div>
-                    <div class="pro-d-left">Phone</div>
-                    <div class="pro-d-right"><?= $merchantDetails->phone; ?></div>
-                    <div class="pro-d-left">Address</div>
-                    <div class="pro-d-right"><?= $merchantDetails->merchant->address; ?>, <?= $merchantDetails->merchant->city; ?>, <?= $merchantDetails->merchant->state; ?>, <?= $merchantDetails->merchant->country; ?></div>
-                    <div class="pro-d-left">Convenience Fee</div>
-                    <div class="pro-d-right">Rs.<?= formatPrice($merchantDetails->merchant->convenience_fee_amount); ?></div>
-                </div>
+            <div class="profile-data-inn">
+                <h3><?= $merchantDetails->name; ?></h3>
+                <p><?= $merchantDetails->merchant->description; ?></p>
+                <div class="pro-d-left">Name</div>
+                <div class="pro-d-right"><?= $merchantDetails->name; ?></div>
+                <div class="pro-d-left">Profile URL</div>
+                <div class="pro-d-right"><a href="<?= HTTP_ROOT . "webfronts/" . $merchantDetails->merchant->profile_url; ?>" target="_blank"><?= HTTP_ROOT . "webfronts/" . $merchantDetails->merchant->profile_url; ?></a></div>
+                <div class="pro-d-left">Email</div>
+                <div class="pro-d-right"><?= $merchantDetails->email; ?></div>
+                <div class="pro-d-left">Phone</div>
+                <div class="pro-d-right"><?= $merchantDetails->phone; ?></div>
+                <div class="pro-d-left">Address</div>
+                <div class="pro-d-right"><?= $merchantDetails->merchant->address; ?>, <?= $merchantDetails->merchant->city; ?>, <?= $merchantDetails->merchant->state; ?>, <?= $merchantDetails->merchant->country; ?></div>
+                <div class="pro-d-left">Convenience Fee</div>
+                <div class="pro-d-right">Rs.<?= formatPrice($merchantDetails->merchant->convenience_fee_amount); ?></div>
+            </div>
         </div>
 
         <div class="profile-data">
-            
+
             <?php if ($this->request->getSession()->read('Auth.User.id') == $merchantDetails->id) { ?>
                 <h2>Payment Gateways <a href="<?= HTTP_ROOT . "merchants/account-setup"; ?>#PaymentGateways" class="btn-edit"><i class="fa fa-pencil-square" aria-hidden="true"></i></a></h2>
             <?php } else { ?>
                 <h2>Payment Gateways <a href="<?= HTTP_ROOT . "admin/edit-merchant/" . $merchantDetails->uniq_id; ?>#PaymentGateways" class="btn-edit"><i class="fa fa-pencil-square" aria-hidden="true"></i></a></h2>
             <?php } ?>
-            
+
             <div class="section-2" style="width: 100%;float:left;padding: 10px;">
                 <div class="section-tile">
                     <div class="accordion" id="fields">
@@ -65,9 +65,9 @@
                                     </div>  
                                     <div style="float: right; margin: 5px 10px;">
                                         <?php if ($paymentGateway->is_default) { ?>
-                                            <a href="<?= HTTP_ROOT . "merchants/activatePaymentGateway/{$paymentGateway->unique_id}" ?>" onclick="return confirm('Are you sure you want to De-Activate?')"><i class="fa fa-thumbs-up" style="color: #28d227; font-size: 25px;" aria-hidden="true"></i></a>&nbsp;
+                                            <a onclick="customConfirm('You want to Inactivate.', '<?= HTTP_ROOT . 'merchants/activatePaymentGateway/' . $paymentGateway->unique_id ?>');" href="javascript:;"><i class="fa fa-thumbs-up" style="color: #28d227; font-size: 25px;" aria-hidden="true"></i></a>&nbsp;
                                         <?php } else { ?>
-                                            <a href="<?= HTTP_ROOT . "merchants/activatePaymentGateway/{$paymentGateway->unique_id}" ?>" onclick="return confirm('Are you sure you want to activate?')"><i class="fa fa-thumbs-down" style="color: #e22e4e; font-size: 25px;" aria-hidden="true"></i></a>&nbsp;
+                                            <a onclick="customConfirm('You want to Inactivate.', '<?= HTTP_ROOT . 'merchants/activatePaymentGateway/' . $paymentGateway->unique_id ?>');" href="javascript:;"><i class="fa fa-thumbs-down" style="color: #e22e4e; font-size: 25px;" aria-hidden="true"></i></a>&nbsp;
                                         <?php } ?>                                   
                                     </div> 
                                 </div> 
@@ -85,13 +85,13 @@
         </div>
 
         <div class="profile-data">
-            
+
             <?php if ($this->request->getSession()->read('Auth.User.id') == $merchantDetails->id) { ?>
                 <h2>Website & Social Info <a href="<?= HTTP_ROOT . "merchants/account-setup"; ?>#WebsiteAndSocial" class="btn-edit"><i class="fa fa-pencil-square" aria-hidden="true"></i></a></h2>
             <?php } else { ?>
                 <h2>Website & Social Info <a href="<?= HTTP_ROOT . "admin/edit-merchant/" . $merchantDetails->uniq_id; ?>#WebsiteAndSocial" class="btn-edit"><i class="fa fa-pencil-square" aria-hidden="true"></i></a></h2>
             <?php } ?>
-                
+
             <div class="pro-d-left">Website </div>
             <div class="pro-d-right"><?= $merchantDetails->merchant->website; ?></div>
             <div class="pro-d-left">Facebook Url</div>
@@ -102,3 +102,27 @@
 
     </div>
 </div>
+
+<script>
+    $(document).ready(function () {
+        $('.customalert').on('click', function (e) {
+            e.preventDefault();
+            var link = $(this).attr('href');
+            swal({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: 'rgb(140, 212, 245)',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes!!'
+            },
+            function (isConfirm) {
+                if (isConfirm) {
+                    window.location.href = link;
+                }
+            });
+
+        });
+    });
+</script>

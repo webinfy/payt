@@ -11,7 +11,7 @@
         <?php } ?>
         <?= $this->Form->create($webfront, ['type' => 'file', 'id' => 'update-logo-form']); ?>
         <input type="hidden" name="step" value="logo" />
-        <input type="file" name="logo" id="file-browser" class="text-file"><br><br>        
+        <input type="file" name="logo" required id="file-browser" class="text-file"><br><br>        
 
         <!--<input type="hidden" name="logobase64" id="response">-->
         <div class="form-div">
