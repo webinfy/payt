@@ -94,7 +94,7 @@
             <div class="content-section">
                 <div class="wrapper">
                     <?= $this->element('Admin/sidebar') ?>                                     
-                    <?= $this->fetch('content') ?>  
+                    <?= $this->fetch('content') ?>
                 </div>
             </div>          
 

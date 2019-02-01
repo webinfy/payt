@@ -134,7 +134,7 @@ background-color: #aaa;
       "scrollbarHeight": 40
       },
       "chartCursor": {
-      "limitToGraph": "g1"
+      "categoryBalloonDateFormat": "MMM-YYYY",
       },
       "categoryField": "date",
       "categoryAxis": {
@@ -145,10 +145,11 @@ background-color: #aaa;
         },
     });
   $(".period").click(function(event){
+    var chartPeriod = $(this).text();
     $(this).addClass('active');
     $(this).siblings().removeClass('active');
     var ajaxdata = $.ajax({
-      url: '/admin/barchart',
+      url: './admin/barchart',
       type: 'GET',
       data: {
         from: "<?= (isset($_GET['from']))? $_GET['from'] : 0 ?>",
@@ -158,12 +159,18 @@ background-color: #aaa;
       success: function(data){
         data = $.parseJSON(data);
         chart.dataProvider = data;
+        if (chartPeriod == "Day")
+        {
+          console.log("1");
+        }
+        else-if()
+        {}
         chart.validateData();
       }
     });
   });
   var ajaxdata = $.ajax({
-  url: '/admin/barchart',
+  url: './admin/barchart',
   type: 'GET',
   data: {
   from: "<?= (isset($_GET['from']))? $_GET['from'] : 0 ?>",

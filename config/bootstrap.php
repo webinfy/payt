@@ -214,7 +214,7 @@ define('KEY', 'xlIeC9');
 //define('SALT', 'U37OlGdi');
 define('SALT', 'qVCckzCA');
 define('PAYU_API_URL', 'https://test.payu.in/merchant/postservice.php?form=2');
-
+define('RAZORPAY_API_URL', 'https://api.razorpay.com/v1/payments/');
 define('PAYU_LIVE', FALSE);
 if (PAYU_LIVE) {
     define('PAYU_URL', 'https://secure.payu.in/_payment');

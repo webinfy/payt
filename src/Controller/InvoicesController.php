@@ -148,6 +148,21 @@ class InvoicesController extends AppController {
 
             $data = $this->request->getData();
 
+            $payment = $this->Payments->find()->where(['Payments.uniq_id' => $data['uniq_id']])->contain(['Webfronts.Users.MerchantPaymentGateways.PaymentGateways','Webfronts.Users'])->first();
+            $key = $payment->webfront->user->merchant_payment_gateway->merchant_key;
+            $salt = $payment->webfront->user->merchant_payment_gateway->merchant_salt;
+            $paymentResponse = $this->razorPaymentStatus($data['razorpay_payment_id'],$key,$salt);
+
+            if ($paymentResponse->status == 'authorized') {
+                $paymentCaptureResponse = $this->razorPaymentCapture($paymentResponse->id,$paymentResponse->amount,$key,$salt);
+                $data['unmappedstatus'] = $paymentCaptureResponse->status;
+                $data['mode'] = $paymentCaptureResponse->method;
+            }
+            else
+            {
+                $data['unmappedstatus'] = $paymentResponse->status;
+                $data['mode'] = $paymentResponse->method;
+            }            
             // Save Payment Gateway infromation to log table for future use.
             $this->PaymentGatewayResponses->saveToLog($data, $uniqID);
 
@@ -155,8 +170,6 @@ class InvoicesController extends AppController {
             $data['status'] = 1;
             $data['payment_date'] = date('Y-m-d');
             $data['paid_via'] = 'RazorPay';
-
-            $payment = $this->Payments->find()->where(['Payments.uniq_id' => $data['uniq_id']])->contain(['Webfronts.Users'])->first();
 
             $this->Payments->patchEntity($payment, $data, ['associated' => []]);
 
@@ -181,5 +194,39 @@ class InvoicesController extends AppController {
         }
         return $this->redirect(HTTP_ROOT . 'preview-invoice/' . $uniqID);
     }
+    protected function razorPaymentStatus($paymentId,$key,$salt){
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, RAZORPAY_API_URL.$paymentId);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
 
+        curl_setopt($ch, CURLOPT_USERPWD, $key . ':' . $salt);
+
+        $result = curl_exec($ch);
+        if (curl_errno($ch)) {
+            return 'Error:' . curl_error($ch);
+        }
+        curl_close ($ch);
+        return json_decode($result);
+    }
+    protected function razorPaymentCapture($paymentId,$amount,$key,$salt){
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, RAZORPAY_API_URL.$paymentId.'/capture');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, "amount=".$amount);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_USERPWD, $key . ':' . $salt);
+
+        $headers = array();
+        $headers[] = 'Content-Type: application/x-www-form-urlencoded';
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        $result = curl_exec($ch);
+        if (curl_errno($ch)) {
+            echo 'Error:' . curl_error($ch);
+        }
+        curl_close ($ch);
+        return json_decode($result);
+    }
 }

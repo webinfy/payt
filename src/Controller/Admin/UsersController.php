@@ -206,7 +206,7 @@ class UsersController extends AdminController {
         $timetravel = $time1;
         while($timetravel <= $time2) {
             $monthYear = date('M-Y', $timetravel);
-            $chartData[] = array('date'=> date('Y-m-d',$timetravel),'paid' => $paidresult[$monthYear], 'unpaid' => $unpaidresult[$monthYear]);
+            $chartData[] = array('date'=> date('Y-m-d',$timetravel),'paid' => $paidresult[$monthYear], 'unpaid' => $unpaidresult[$monthYear],'period' => date('M',$timetravel));
             $timetravel += strtotime('+1 month', 0);
         }
         return $chartData;
