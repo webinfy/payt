@@ -61,6 +61,7 @@
         <script src="https://www.amcharts.com/lib/3/amcharts.js"></script>
 	    <script src="https://www.amcharts.com/lib/3/pie.js"></script>
 	    <script src="https://www.amcharts.com/lib/3/themes/light.js"></script>
+        <script src="js/charts.js"></script>
         <script>
             var chart = AmCharts.makeChart("donutchart", {
                 "type": "pie",

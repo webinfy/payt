@@ -168,7 +168,6 @@ class UsersController extends AdminController {
             case 'Day':
                 echo json_encode($this->dailybarchart($input));
                 break;
-            
             default:
                 echo "ajax call tempered";
                 break;

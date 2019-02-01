@@ -136,6 +136,9 @@ background-color: #aaa;
       "chartCursor": {
       "limitToGraph": "g1"
       },
+      "chartCursor": {
+      "categoryBalloonDateFormat": "MMM-YYYY",
+      },
       "categoryField": "date",
       "categoryAxis": {
           "parseDates": true,
@@ -145,6 +148,7 @@ background-color: #aaa;
         },
     });
   $(".period").click(function(event){
+    var chartPeriod = $(this).text();
     $(this).addClass('active');
     $(this).siblings().removeClass('active');
     var ajaxdata = $.ajax({
@@ -157,6 +161,9 @@ background-color: #aaa;
       },
       success: function(data){
         data = $.parseJSON(data);
+        var format = {Day:"DD-MM-YYYY",Month: "MMM-YYYY",Week: "W-YYYY"};
+        chart.chartCursor.categoryBalloonText = chartPeriod+" [[category]]";
+        chart.chartCursor.categoryBalloonDateFormat = format[chartPeriod];
         chart.dataProvider = data;
         chart.validateData();
       }
@@ -172,6 +179,7 @@ background-color: #aaa;
   },
   success: function(data){
   data = $.parseJSON(data);
+   chart.chartCursor.categoryBalloonText = "Month [[category]]";
   chart.dataProvider = data;
   chart.validateData();
   }

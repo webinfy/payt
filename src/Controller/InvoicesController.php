@@ -50,7 +50,6 @@ class InvoicesController extends AppController {
         $this->set(compact('payment', 'advance'));
 
         $this->loadComponent('Mpdf');
-
         // Generate PDF Start        
         if (isset($_REQUEST['pdf']) && $_REQUEST['pdf'] == 'true') {
             $this->Mpdf->init(); // Initializing mPDF               
@@ -156,7 +155,18 @@ class InvoicesController extends AppController {
             if ($paymentResponse->status == 'authorized') {
                 $paymentCaptureResponse = $this->razorPaymentCapture($paymentResponse->id,$paymentResponse->amount,$key,$salt);
                 $data['unmappedstatus'] = $paymentCaptureResponse->status;
-                $data['mode'] = $paymentCaptureResponse->method;
+                if ($paymentCaptureResponse->method = 'card') {
+                    if ($paymentCaptureResponse->card->type = 'debit') {
+                        $data['mode'] = "DC";
+                    }elseif($paymentCaptureResponse->card->type = 'credit'){
+                        $data['mode'] = "CC";
+                    }else {
+                        $data['mode'] = $paymentCaptureResponse->method;
+                    }
+                }
+                else{
+                    $data['mode'] = $paymentCaptureResponse->method;
+                }
             }
             else
             {
