@@ -159,12 +159,6 @@ background-color: #aaa;
       success: function(data){
         data = $.parseJSON(data);
         chart.dataProvider = data;
-        if (chartPeriod == "Day")
-        {
-          console.log("1");
-        }
-        else-if()
-        {}
         chart.validateData();
       }
     });
