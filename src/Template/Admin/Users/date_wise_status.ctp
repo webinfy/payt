@@ -158,6 +158,9 @@ background-color: #aaa;
       },
       success: function(data){
         data = $.parseJSON(data);
+        var format = {Day:"DD-MM-YYYY",Month: "MMM-YYYY",Week: "W-YYYY"};
+        chart.chartCursor.categoryBalloonText = chartPeriod+" [[category]]";
+        chart.chartCursor.categoryBalloonDateFormat = format[chartPeriod];
         chart.dataProvider = data;
         chart.validateData();
       }
@@ -173,6 +176,7 @@ background-color: #aaa;
   },
   success: function(data){
   data = $.parseJSON(data);
+  chart.chartCursor.categoryBalloonText = "Month [[category]]";
   chart.dataProvider = data;
   chart.validateData();
   }
