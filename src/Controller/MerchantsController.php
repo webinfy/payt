@@ -87,7 +87,6 @@ class MerchantsController extends AppController {
         foreach ($result as $key => $value) {
             array_push($unmappedstatus, $value['unmappedstatus']);
         }
-
         $donutchart = $this->donutchart($unmappedstatus,$from,$to);
         $this->set(compact('donutchart','from','to'));
     }
@@ -117,10 +116,13 @@ class MerchantsController extends AppController {
         }
         $from = $this->from;
         $to = $this->to;
-        $this->set(compact('barchart','from','to'));
+        $this->set(compact('from','to'));
     }
     protected function piechart($conditions,$from_date,$to_date)
     {
+        if (empty($this->getWebfrontsIds())) {
+            return '';
+        }
         $query = $this->Payments->find()->where(function($exp) use ($from_date,$to_date) {
                 return $exp->between('created', $from_date, $to_date, 'date')->in('webfront_id',$this->getWebfrontsIds());
             });
@@ -144,6 +146,9 @@ class MerchantsController extends AppController {
     }
     protected function donutchart($conditions,$from_date,$to_date)
     {
+        if (empty($this->getWebfrontsIds())) {
+            return '';
+        }
         $query = $this->Payments->find()->where(function($exp) use ($from_date,$to_date) {
                 return $exp->between('payment_date', $from_date, $to_date, 'date')->in('webfront_id',$this->getWebfrontsIds());
             });
@@ -281,6 +286,9 @@ class MerchantsController extends AppController {
     }
     protected function paymentmod($conditions,$from_date,$to_date)
     {
+        if (empty($this->getWebfrontsIds())) {
+            return '';
+        }
         $query = $this->Payments->find()->where(function($exp) use ($from_date,$to_date) {
                 return $exp->between('payment_date', $from_date, $to_date, 'date')->in('webfront_id',$this->getWebfrontsIds());
             });

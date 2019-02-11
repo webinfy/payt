@@ -41,7 +41,9 @@
         <div class="row">
             <div class="col-md-12">
                 <ul class="chart-box">
-                    <?php foreach ($paymentmod_data as $key => $value) {?>
+                    <?php 
+                        if(!empty($paymentmod_data))
+                        foreach ($paymentmod_data as $key => $value) {?>
                         <li class="options">
                             <input class="input" type="checkbox" name="<?= $value['section'] ?>" value="<?= $value['total'] ?>" checked>
                             <label class="name"><?= $value['section'] ?></label>

@@ -41,7 +41,9 @@
         <div class="container">
             <div class="row">
                 <ul>
-                <?php foreach ($piechart as $value) {
+                <?php 
+                if(!empty($piechart))
+                foreach ($piechart as $value) {
                     echo "<li><span style='display:inline-block;height: 15px;width: 20px;background-color:".$value['color'].";'></span><span>".ucfirst($value['section'])." (".$value['total'].")</span></li>";
                 }?>
                 </ul>

@@ -152,7 +152,7 @@ background-color: #aaa;
     $(this).addClass('active');
     $(this).siblings().removeClass('active');
     var ajaxdata = $.ajax({
-      url: '/merchants/barchart',
+      url: siteUrl+'merchants/barchart',
       type: 'GET',
       data: {
         from: "<?= (isset($_GET['from']))? $_GET['from'] : 0 ?>",
@@ -170,7 +170,7 @@ background-color: #aaa;
     });
   });
   var ajaxdata = $.ajax({
-  url: '/merchants/barchart',
+  url: siteUrl+'merchants/barchart',
   type: 'GET',
   data: {
   from: "<?= (isset($_GET['from']))? $_GET['from'] : 0 ?>",
